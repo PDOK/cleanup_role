@@ -1,0 +1,21 @@
+---
+galaxy_info:
+  author: PDOK
+  description: Role to add ReplicaSets to ConfigMap OwnerReferences
+  company: PDOK
+
+  license: license (MIT)
+
+  min_ansible_version: 2.9
+
+  platforms:
+    - name: Kubernetes
+      versions:
+        - 1.18
+
+  galaxy_tags: []
+
+dependencies: []
+
+collections:
+  - community.kubernetes

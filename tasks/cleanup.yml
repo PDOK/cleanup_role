@@ -1,0 +1,26 @@
+---
+# tasks file for cleanup
+
+- name: combine existing ownerRefences with new ownerReferences
+  set_fact:
+    _owner_references: "{{ item.metadata.ownerReferences | default([]) + owner_references | unique | list }}"
+
+- name: remove custom resource owner refernce if there is at least 1 other owner reference
+  set_fact:
+    _owner_references: "{{ _owner_references | rejectattr('name', 'equalto', ansible_operator_meta.name) | list }}"
+  when:  _owner_references | length > 1
+
+- name: add ownerRefence to existing metadata
+  set_fact:
+    metadata: "{{ item.metadata | combine(update) }}"
+  vars:
+    update:
+      ownerReferences: "{{ _owner_references }}"
+
+- name: "reapply {{ item.metadata.name }} with new ownerreferences"
+  k8s:
+    apply: true
+    definition: "{{ item | combine(update) }}"
+  vars:
+    update:
+      metadata: "{{ metadata }}"

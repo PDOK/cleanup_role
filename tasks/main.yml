@@ -1,0 +1,41 @@
+---
+# tasks file for cleanup
+
+- name: transform labels to label_selectors
+  set_fact:
+    label_selectors: "{{ label_selectors | default([]) + [ label ] }}"
+  vars:
+    label: "{{ item.key }}={{ item.value }}"
+  loop: "{{ replicaset_labels | dict2items }}"
+
+- name: get replicasets based on label_selectors
+  k8s_info:
+    api_version: apps/v1
+    kind: ReplicaSet
+    namespace: "{{ ansible_operator_meta.namespace }}"
+    label_selectors: "{{ label_selectors }}"
+  register: replicasets
+
+- name: set owner_refences from found replicasets
+  set_fact:
+    owner_references: "{{ owner_references | default([]) + [ reference ] }}"
+  vars:
+    reference:
+      apiVersion: "{{ item.apiVersion }}"
+      kind: "{{ item.kind }}"
+      name: "{{ item.metadata.name }}"
+      uid: "{{ item.metadata.uid }}"
+  loop: "{{ replicasets.resources }}"
+  when: replicasets.resources | length > 0
+
+- name: set owner_references to custom resource when no replicasets where found
+  set_fact:
+    owner_references:
+    - apiVersion: "{{ resource.apiVersion }}"
+      kind: "{{ resource.kind }}"
+      name: "{{ resource.metadata.name }}"
+      uid: "{{ resource.metadata.uid }}"
+  when: replicasets.resources | length == 0
+
+- include_tasks: cleanup.yml
+  loop: "{{ configmaps }}"
