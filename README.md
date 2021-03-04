@@ -1,5 +1,5 @@
-[![GitHub license](https://img.shields.io/github/license/Shalucik/cleanup_role)](https://github.com/Shalucik/cleanup_role/blob/main/LICENSE)
-[![GitHub release](https://img.shields.io/github/release/Shalucik/cleanup_role.svg)](https://github.com/Shalucik/cleanup_role/releases)
+[![GitHub license](https://img.shields.io/github/license/PDOK/cleanup_role)](https://github.com/PDOK/cleanup_role/blob/main/LICENSE)
+[![GitHub release](https://img.shields.io/github/release/PDOK/cleanup_role.svg)](https://github.com/PDOK/cleanup_role/releases)
 
 # Cleanup
 
