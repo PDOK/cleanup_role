@@ -5,7 +5,7 @@
   set_fact:
     _owner_references: "{{ item.metadata.ownerReferences | default([]) + owner_references | unique | list }}"
 
-- name: remove custom resource owner refernce if there is at least 1 other owner reference
+- name: remove custom resource owner reference if there is at least 1 other owner reference
   set_fact:
     _owner_references: "{{ _owner_references | rejectattr('name', 'equalto', ansible_operator_meta.name) | list }}"
   when:  _owner_references | length > 1
@@ -17,10 +17,11 @@
     update:
       ownerReferences: "{{ _owner_references }}"
 
-- name: "reapply {{ item.metadata.name }} with new ownerreferences"
+- name: "patch {{ item.metadata.name }} with new ownerreferences"
   k8s:
-    apply: true
     definition: "{{ item | combine(update) }}"
+    merge_type:
+      - json
   vars:
     update:
       metadata: "{{ metadata }}"
