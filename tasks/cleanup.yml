@@ -1,27 +1,34 @@
 ---
 # tasks file for cleanup
-
 - name: combine existing ownerRefences with new ownerReferences
   set_fact:
-    _owner_references: "{{ item.metadata.ownerReferences | default([]) + owner_references | unique | list }}"
+    _owner_references: "{{ item.metadata.ownerReferences | default([]) + (cluster_resources.resources[0].metadata.ownerReferences | default([]) ) + owner_references | unique | list }}"
+
+# awaiting https://docs.ansible.com/ansible/latest/collections/kubernetes/core/k8s_json_patch_module.html (kubernetes.core 2.0.0) for better patching of ownerreferences
+# for now already applied resources must be retrieved from the cluster
+- name: get applied resource
+  k8s_info:
+    api_version: "{{ item.apiVersion }}"
+    kind: "{{ item.kind }}"
+    namespace: "{{ ansible_operator_meta.namespace }}"
+    name: "{{ item.metadata.name }}"
+  register: cluster_resources
+
+- name: combine cluster ownerRefences with ownerReferences
+  set_fact:
+    _owner_references: "{{ cluster_resources.resources[0].metadata.ownerReferences | default([]) + _owner_references | unique | list }}"
 
 - name: remove custom resource owner reference if there is at least 1 other owner reference
   set_fact:
     _owner_references: "{{ _owner_references | rejectattr('name', 'equalto', ansible_operator_meta.name) | list }}"
   when:  _owner_references | length > 1
 
-- name: add ownerRefence to existing metadata
-  set_fact:
-    metadata: "{{ item.metadata | combine(update) }}"
-  vars:
-    update:
-      ownerReferences: "{{ _owner_references }}"
-
 - name: "patch {{ item.metadata.name }} with new ownerreferences"
   k8s:
-    definition: "{{ item | combine(update) }}"
+    definition: "{{ item | combine(update, recursive=true) }}"
     merge_type:
-      - json
+      - merge
   vars:
     update:
-      metadata: "{{ metadata }}"
+      metadata:
+        ownerReferences: "{{ _owner_references }}"
