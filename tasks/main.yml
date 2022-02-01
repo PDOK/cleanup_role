@@ -26,15 +26,17 @@
       name: "{{ item.metadata.name }}"
       uid: "{{ item.metadata.uid }}"
   loop: "{{ replicasets.resources }}"
+  loop_control:
+    label: "{{ item.metadata.name }}"
   when: replicasets.resources | length > 0
 
 - name: set owner_references to custom resource when no replicasets where found
   set_fact:
     owner_references:
-    - apiVersion: "{{ resource.apiVersion }}"
-      kind: "{{ resource.kind }}"
-      name: "{{ resource.metadata.name }}"
-      uid: "{{ resource.metadata.uid }}"
+      - apiVersion: "{{ resource.apiVersion }}"
+        kind: "{{ resource.kind }}"
+        name: "{{ resource.metadata.name }}"
+        uid: "{{ resource.metadata.uid }}"
   when: replicasets.resources | length == 0
 
 - include_tasks: cleanup.yml
