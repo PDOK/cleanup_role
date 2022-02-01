@@ -2,7 +2,7 @@
 # tasks file for cleanup
 - name: combine existing ownerRefences with new ownerReferences
   set_fact:
-    _owner_references: "{{ item.metadata.ownerReferences | default([]) + (cluster_resources.resources[0].metadata.ownerReferences | default([]) ) + owner_references | unique | list }}"
+    _owner_references: "{{ item.metadata.ownerReferences | default([]) + owner_references | unique | list }}"
 
 # awaiting https://docs.ansible.com/ansible/latest/collections/kubernetes/core/k8s_json_patch_module.html (kubernetes.core 2.0.0) for better patching of ownerreferences
 # for now already applied resources must be retrieved from the cluster
